@@ -1,6 +1,9 @@
 # ISDA SIMM
 This is an implementation of ISDA Standard Initial Margin Model (a.k.a. [ISDA SIMM™](https://www.isda.org/category/margin/isda-simm/)) version 2.3 & 2.4 to calculate the initial margin of uncleared over-the-counter derivatives in Python. The implementation is soley based on the official [ISDA SIMM Methodology Documents](https://www.isda.org/a/CeggE/ISDA-SIMM-v2.4-PUBLIC.pdf).
 
+비청산 장외파생상품 개시증거금 ISDA SIMM 산출 Python 엔진입니다!
+
+
 ## Getting Started
   - Place your [CRIF](https://www.isda.org/a/owEDE/risk-data-standards-v1-36-public.pdf) file under the folder "CRIF" with all columns needed for the caculation
   - Run main.py
