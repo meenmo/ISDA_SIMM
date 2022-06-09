@@ -3,6 +3,8 @@ This is an implementation of ISDA Standard Initial Margin Model (a.k.a. [ISDA SI
 
 비청산 장외파생상품 개시증거금 ISDA SIMM 산출 Python 엔진입니다
 
+**Your contribution will be always welcomed!**
+
 
 ## Getting Started
   - Place your [CRIF](https://www.isda.org/a/owEDE/risk-data-standards-v1-36-public.pdf) file under the folder "CRIF" with all columns needed for the calculation
