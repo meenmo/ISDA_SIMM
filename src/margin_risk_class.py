@@ -1,5 +1,5 @@
 import pandas      as pd
-from   math        import sqrt
+from   math        import sqrt, isnan
 from   scipy.stats import norm
 from   copy        import deepcopy
 
@@ -791,7 +791,7 @@ class MarginByRiskClass:
                 CVR_abs_sum += sum([abs(CVR) for CVR in list_CVR]) 
 
 
-                theta  = min(CVR_sum/CVR_abs_sum, 0)
+                theta  = 0 if isnan(CVR_sum/CVR_abs_sum) else min(CVR_sum/CVR_abs_sum, 0)
                 _lambda = (norm.ppf(0.995)**2 - 1) * (1 + theta) - theta
                 updates['FX']['Curvature'] += max(CVR_sum + _lambda * K, 0)
                 
