@@ -79,13 +79,13 @@ class AggregateMargins:
 
             values_list = list(dic_sensiType.values())
             if values_list != [0]*len(values_list):
-                df_main = df_main.append(df_local_sensiType)
+                df_main = pd.concat([df_main, df_local_sensiType])
                       
             IM_risk_class = sum(list(df_local_sensiType['SIMM_RiskMeasure']))
             df_local_riskType = pd.DataFrame({'Risk Class': [risk_class], 'SIMM_RiskClass': [IM_risk_class]})
 
             df_local_riskType = df_local_riskType.round(2)
-            df_risk_class = df_risk_class.append(df_local_riskType)
+            df_risk_class = pd.concat([df_risk_class, df_local_riskType])
         
         df_main = df_main.round(2)
 
@@ -125,7 +125,7 @@ class AggregateMargins:
             df_prod['SIMM_ProductClass'] = simm_prod           
             
             simm_total += simm_prod
-            df_total    = df_total.append(df_prod)
+            df_total    = pd.concat([df_total, df_prod])
 
             if 'Param_ProductClassMultiplier' in utils.unique_list(self.crif, 'RiskType'):
                 df_ms = self.crif[self.crif['RiskType'] == 'Param_ProductClassMultiplier']
