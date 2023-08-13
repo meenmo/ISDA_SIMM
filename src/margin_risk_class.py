@@ -758,16 +758,13 @@ class MarginByRiskClass:
                     pair_list = [currency_pair, currency_pair[3:]+currency_pair[:3]]
                     df = self.crif[(self.crif['RiskType']  == risk_class) & (self.crif['Qualifier'].isin(pair_list))]
             
-                    is_given_currency = (currency_pair[:3] in wnc.high_vol_currency_group or currency_pair[3:] in wnc.high_vol_currency_group) 
-                    is_calc_currency  = self.calculation_currency in wnc.high_vol_currency_group
-                    if (is_given_currency==True) and (is_calc_currency==True):
-                        RW  = wnc.fx_rw['High']['High']
-                    elif (is_given_currency==True) and (is_calc_currency==False):
-                        RW  = wnc.fx_rw['High']['Regular']
-                    elif (is_given_currency==False) and (is_calc_currency==True):
-                        RW  = wnc.fx_rw['Regular']['High']
-                    else:
-                        RW  = wnc.fx_rw['Regular']['Regular']
+                    is_ccy1_high_vol = currency_pair[:3] in wnc.high_vol_currency_group
+                    is_ccy2_high_vol = currency_pair[3:] in wnc.high_vol_currency_group
+
+                    fx_vol_group1 = 'High' if is_ccy1_high_vol else 'Regular'
+                    fx_vol_group2 = 'High' if is_ccy2_high_vol else 'Regular'
+
+                    RW = wnc.fx_rw[fx_vol_group2][fx_vol_group1]
                                                        
                     sigma = RW * sqrt(365/14)/norm.ppf(0.99)                
                     list_vega  = df['AmountUSD'].to_list()
