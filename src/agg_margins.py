@@ -45,9 +45,9 @@ class AggregateMargins:
      
         dict_simm_risk_class = {}
         risk_class_list = list(gv.dict_margin_by_risk_class.keys())
+        simm_by_risk_class = self.simm_risk_class(crif)
         for risk_class in risk_class_list:
-
-            simm_risk_class = sum(list(self.simm_risk_class(crif)[risk_class].values()))        
+            simm_risk_class = sum(list(simm_by_risk_class[risk_class].values()))        
             dict_simm_risk_class[risk_class] = simm_risk_class
 
         simm_product = 0
