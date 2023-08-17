@@ -446,7 +446,7 @@ ir_vega_CT = {
 # p.27, 83: Vega Concentration Thresholds for Credit Spread Risk
 credit_vega_CT = {
     "Qualifying"     : 260, 
-    "Non-Qualifying" : 1455,
+    "Non-Qualifying" : 145,
 }
 
 # p.28, 84: Vega Concentration Thresholds for Equity Risk
