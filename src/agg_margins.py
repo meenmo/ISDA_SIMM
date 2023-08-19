@@ -3,7 +3,7 @@ from   math   import sqrt
 
 import utils
 import global_vars       as gv
-import weights_corr2_4   as wnc
+import weights_corr2_5   as wnc
 from   margin_risk_class import MarginByRiskClass
 
 

@@ -2,7 +2,7 @@ import math
 import numpy as np
 
 import global_vars as gv
-import weights_corr2_4 as wnc
+import weights_corr2_5 as wnc
 
 
 def k_delta(
