@@ -7,7 +7,7 @@ This is an implementation of ISDA Standard Initial Margin Model (a.k.a. [ISDA SI
 
 
 ## Getting Started
-  - Place your [CRIF](https://www.isda.org/a/owEDE/risk-data-standards-v1-36-public.pdf) file under the folder "CRIF" with all columns needed for the calculation
+  - Place your [CRIF]([https://www.isda.org/a/owEDE/risk-data-standards-v1-36-public.pdf](https://www.isda.org/a/Pf2gE/ISDA-SIMM-v2.5.pdf)) file under the folder "CRIF" with all columns needed for the calculation
   - Run main.py
 
 ## Results Example
