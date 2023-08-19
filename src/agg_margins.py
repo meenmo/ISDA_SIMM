@@ -11,8 +11,10 @@ from   margin_risk_class import MarginByRiskClass
 class AggregateMargins:
     def __init__(self, crif, calculation_currency, exchange_rate):
         self.crif = crif
+        self.simm = 0
         self.calc_currency = calculation_currency
         self.exchange_rate = exchange_rate
+        self.calculate_simm()
     
     # Margin by six risk classes (IR, FX, Equity, Commodity, CreditQ, Credit Non-Q)
     def simm_risk_class(self,crif):    
@@ -113,9 +115,8 @@ class AggregateMargins:
         return addon
 
 
-    def simm(self):
+    def calculate_simm(self):
         addon_ms   = 0  # addon multiplicative scales
-        simm_total = 0
         dict_addon = {}
         df_total   = pd.DataFrame()
 
@@ -124,7 +125,7 @@ class AggregateMargins:
             simm_prod = self.simm_product(product_class)
             df_prod['SIMM_ProductClass'] = simm_prod           
             
-            simm_total += simm_prod
+            self.simm += simm_prod
             df_total    = pd.concat([df_total, df_prod])
 
             if 'Param_ProductClassMultiplier' in utils.unique_list(self.crif, 'RiskType'):
@@ -136,9 +137,9 @@ class AggregateMargins:
             dict_addon[product_class] = simm_prod
 
         addon_margin = round(addon_ms + self.addon_margin(), 2)
-        simm_total  += addon_margin
+        self.simm  += addon_margin
 
-        df_total['SIMM Total'] = simm_total        
+        df_total['SIMM Total'] = self.simm        
         df_total = df_total.round(2)
 
         if addon_margin != 0:
