@@ -359,11 +359,11 @@ class MarginByRiskClass:
 
                     list_rates_risk_types = utils.unique_list([risk_class for risk_class in crif_currency['RiskType'] if risk_class in ['Risk_IRVol','Risk_InflationVol']])
                     for risk_class in list_rates_risk_types:
-                        crif_riskClass = crif_currency[crif_currency['RiskType'] == risk_class]           
+                        crif_risk_class = crif_currency[crif_currency['RiskType'] == risk_class]           
                     
-                        tenor_list = utils.tenor_list(crif_riskClass)
+                        tenor_list = utils.tenor_list(crif_risk_class)
                         for tenor in tenor_list:
-                            crif_tenor = crif_riskClass[crif_riskClass['Label1'] == tenor]
+                            crif_tenor = crif_risk_class[crif_risk_class['Label1'] == tenor]
                             sensitivities = utils.sum_sensitivities(crif_tenor)
 
                             VR.append(VRW * sensitivities * VCR)
@@ -373,7 +373,7 @@ class MarginByRiskClass:
                             elif risk_class == 'Risk_InflationVol':
                                 index.append('Inf')
                     
-                    K = k_vega('Rates',VR,index=index)            
+                    K = k_vega('Rates', VR, index=index)            
                     list_K.append(K)
                     
                     S = max(min(sum(VR), K), -K)
@@ -607,13 +607,22 @@ class MarginByRiskClass:
                     list_rates_risk_types = utils.unique_list([risk_class for risk_class in list(crif_currency['RiskType']) if risk_class in ['Risk_IRVol','Risk_InflationVol']])
                     index = []
                     CVR_ik = []
-
+                    
                     for risk_class in list_rates_risk_types:
                         
-                        crif_riskClass = crif_currency[crif_currency['RiskType'] == risk_class]
-
-                        for tenor in utils.unique_list(crif_riskClass, 'Label1'):
-                            crif_tenor = crif_riskClass[crif_riskClass['Label1'] == tenor]
+                        crif_risk_class = crif_currency[crif_currency['RiskType'] == risk_class]
+                        
+                        print(crif_risk_class)
+                        if (risk_class == 'Risk_InflationVol') and (crif_risk_class['Qualifier'].unique()==self.calculation_currency):
+                            crif_risk_class = crif_risk_class.groupby(crif_risk_class['AmountUSD'].abs()).filter(lambda group: group['AmountUSD'].sum() != 0)
+                        print(crif_risk_class)
+                        print("-"*150)
+                        # if (risk_class == 'Risk_InflationVol') and (utils.sum_sensitivities(crif_risk_class)==0) and (crif_risk_class['Qualifier'].unique()==self.calculation_currency):
+                        #     print("@")
+                        #     continue
+                            
+                        for tenor in utils.unique_list(crif_risk_class, 'Label1'):
+                            crif_tenor = crif_risk_class[crif_risk_class['Label1'] == tenor]
 
                             sensitivities = utils.sum_sensitivities(crif_tenor)
 
@@ -633,7 +642,7 @@ class MarginByRiskClass:
                     S = max(min(sum(CVR_ik), K), -K)
                     list_S.append(S)
 
-                theta  = min(CVR_sum/CVR_abs_sum, 0)
+                theta  = min(CVR_sum/CVR_abs_sum, 0) if CVR_abs_sum != 0 else 0
                 _lambda = (norm.ppf(0.995)**2 - 1) * (1 + theta) - theta
 
 

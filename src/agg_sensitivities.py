@@ -175,7 +175,7 @@ def k_curvature(
                 elif risk_class in ['Risk_CreditVol', 'Risk_CreditVolNonQ']:
 
                     rho = wnc.rho(risk_class, index[k], index[l])
-
+                
                 K += (rho**2) * CVR_list[k] * CVR_list[l]
-
+                
     return math.sqrt(K)
