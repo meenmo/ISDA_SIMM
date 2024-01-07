@@ -1,9 +1,14 @@
 import math
 import numpy as np
 
-import global_vars as gv
-import weights_corr2_5 as wnc
-
+from . import wnc
+from . import (
+    list_creditQ,
+    list_credit_nonQ,
+    list_equity,
+    list_commodity,
+    list_fx,
+)
 
 def k_delta(
         risk_class,
@@ -43,15 +48,15 @@ def k_delta(
                         rho = 1                   
                 
                 # Credit
-                elif risk_class in gv.list_creditQ + gv.list_credit_nonQ:
+                elif risk_class in list_creditQ + list_credit_nonQ:
                     rho = wnc.rho(risk_class,index[i],index[j])
                     
                 # Equity, Commodity, FX
                 else:
-                    if risk_class in gv.list_equity + gv.list_commodity:
+                    if risk_class in list_equity + list_commodity:
                         rho = wnc.rho(risk_class,bucket=bucket)
 
-                    elif risk_class in gv.list_fx:
+                    elif risk_class in list_fx:
                                         
                         currency1 = bucket[i]
                         currency2 = bucket[j]
@@ -119,10 +124,10 @@ def k_vega(
                     else:
                         rho = wnc.rho('Risk_IRVol', index_k, index_l)
 
-                elif risk_class in gv.list_equity + gv.list_commodity:
+                elif risk_class in list_equity + list_commodity:
                     rho = wnc.rho(risk_class,bucket=bucket)
 
-                elif risk_class in gv.list_fx:
+                elif risk_class in list_fx:
                     rho = wnc.fx_vega_corr
 
                 elif risk_class in ['Risk_CreditVol', 'Risk_CreditVolNonQ']:
@@ -165,10 +170,10 @@ def k_curvature(
                         rho = wnc.rho('Risk_IRVol', index[k], index[l])
 
                         
-                elif risk_class in gv.list_equity + gv.list_commodity:
+                elif risk_class in list_equity + list_commodity:
                     rho = wnc.rho(risk_class,bucket=bucket)
                     
-                elif risk_class in gv.list_fx:
+                elif risk_class in list_fx:
                     rho = wnc.fx_vega_corr
 
 

@@ -1,5 +1,5 @@
 import math
-import global_vars as gv
+from . import simm_tenor_list
 
 # Calculate Concentration Threshold
 def concentration_threshold(sum_s,T):
@@ -12,7 +12,7 @@ def sum_sensitivities(crif):
 # Extract tenors as a list from CRIF
 def tenor_list(crif):
     label_1 = crif['Label1'].tolist()
-    return list(set([x.lower() for x in label_1 if x.lower() in gv.tenor_list]))
+    return list(set([x.lower() for x in label_1 if x.lower() in simm_tenor_list]))
 
 # Extract distict values only from a list or a pandas column
 def unique_list(x, column=None):
@@ -55,20 +55,12 @@ def bucket_list(df):
 
 # Scaling Function of time t (for Curvature Margin)
 def scaling_func(t):
+    t = t.lower()
     if t == '2w':
         return 0.5
-
-    elif ('m' in t) or ('M' in t):
-        if 'm' in t:
-            t = (365/12) * float(t.replace('m',''))
-        elif 'M' in t:
-            t = (365/12) * float(t.replace('M',''))
-            
+    elif 'm' in t:
+        t = (365/12) * float(t.replace('m', ''))
         return 0.5 * min(1, 14/t)
-    
-    elif ('y' in t) or ('Y' in t):
-        if 'y' in t:
-            t = 365 * float(t.replace('y',''))
-        elif 'Y' in t:
-            t = 365 * float(t.replace('Y',''))
+    elif 'y' in t:
+        t = 365 * float(t.replace('y', ''))
         return 0.5 * min(1, 14/t)
