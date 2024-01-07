@@ -1,20 +1,20 @@
 import pandas as pd
-from   math   import sqrt
+from math import sqrt
 
-import utils
-import global_vars       as gv
-import weights_corr2_5   as wnc
-from   margin_risk_class import MarginByRiskClass
+from . import wnc
+from . import utils
+from . import dict_margin_by_risk_class
+from .margin_risk_class import MarginByRiskClass
 
 
-
-class AggregateMargins:
+class SIMM:
     def __init__(self, crif, calculation_currency, exchange_rate):
         self.crif = crif
         self.simm = 0
+        self.simm_break_down = pd.DataFrame()
         self.calc_currency = calculation_currency
         self.exchange_rate = exchange_rate
-        self.calculate_simm()
+        self.calculate_simm()  
     
     # Margin by six risk classes (IR, FX, Equity, Commodity, CreditQ, Credit Non-Q)
     def simm_risk_class(self,crif):    
@@ -46,7 +46,7 @@ class AggregateMargins:
         crif = self.crif[(self.crif['ProductClass'] == product_class)]
      
         dict_simm_risk_class = {}
-        risk_class_list = list(gv.dict_margin_by_risk_class.keys())
+        risk_class_list = list(dict_margin_by_risk_class.keys())
         simm_by_risk_class = self.simm_risk_class(crif)
         for risk_class in risk_class_list:
             simm_risk_class = sum(list(simm_by_risk_class[risk_class].values()))        
@@ -95,7 +95,6 @@ class AggregateMargins:
         df_outerJoin['Product Class'] = product_class
 
         return pd.pivot_table(df_outerJoin, index=['Product Class','Risk Class','SIMM_RiskClass','Risk Measure'])
-
     
     def addon_margin(self):
         crif_factorNotional = self.crif[(self.crif['RiskType'].isin(['Param_AddOnNotionalFactor','Notional']))]
@@ -113,7 +112,6 @@ class AggregateMargins:
             addon   += factor * notional
     
         return addon
-
 
     def calculate_simm(self):
         addon_ms   = 0  # addon multiplicative scales
@@ -141,8 +139,8 @@ class AggregateMargins:
 
         df_total['SIMM Total'] = self.simm        
         df_total = df_total.round(2)
-
-        if addon_margin != 0:
+        
+        if abs(addon_margin) > 0:
             df_total['Add-On'] = addon_margin
             df = pd.pivot_table(df_total, index=['SIMM Total','Add-On','Product Class','SIMM_ProductClass','Risk Class','SIMM_RiskClass','Risk Measure'])
 
@@ -152,4 +150,5 @@ class AggregateMargins:
         pd.set_option('float_format', '{:f}'.format)
         pd.set_option('float_format', '{:,}'.format)
 
+        self.simm_break_down = df.copy()
         return df

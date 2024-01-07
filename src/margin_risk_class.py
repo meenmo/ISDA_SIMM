@@ -3,22 +3,34 @@ from   math        import sqrt, isnan
 from   scipy.stats import norm
 from   copy        import deepcopy
 
-import utils
-import global_vars       as gv
-import weights_corr2_5   as wnc
-from   agg_sensitivities import k_delta, k_vega, k_curvature
-
+from . import utils
+from . import wnc
+from .agg_sensitivities import (
+    k_delta, 
+    k_vega, 
+    k_curvature
+)
+from . import (
+    dict_margin_by_risk_class,
+    dict_margin_by_risk_class,
+    list_rates,
+    list_fx,
+    list_credit_nonQ,
+    list_creditQ,
+    list_equity,
+    list_commodity,
+)
 
 class MarginByRiskClass:
     def __init__(self, crif, calculation_currency):
         self.crif    = crif
-        self.results = gv.dict_margin_by_risk_class
+        self.results = dict_margin_by_risk_class
         self.calculation_currency = calculation_currency
         self.list_risk_types = utils.unique_list(self.crif, 'RiskType')
 
     # Delta Margin for Rates Risk Classes Only (Risk_IRCurve, Risk_Inflation, Risk_XCcyBasis)
     def IRDeltaMargin(self):
-        updates = deepcopy(gv.dict_margin_by_risk_class)
+        updates = deepcopy(dict_margin_by_risk_class)
 
         # Skip any risk types other than rates
         if ('Risk_IRCurve'   not in self.list_risk_types) and \
@@ -59,7 +71,6 @@ class MarginByRiskClass:
 
                     # Sensitivities Sum
                     sensitivities = utils.sum_sensitivities(crif_risk_class)
-
                     if risk_class == 'Risk_Inflation':
                         RW = wnc.inflation_rw
                         WS = RW * sensitivities * CR
@@ -84,7 +95,6 @@ class MarginByRiskClass:
                         # Curve types such as LIBOR3M, OIS, etc
                         subcurve_list = utils.unique_list(crif_risk_class, 'Label2')
                         for subcurve in subcurve_list:
-
                             # CRIF by curve
                             crif_subcurve = crif_risk_class[crif_risk_class['Label2']==subcurve]
 
@@ -117,7 +127,7 @@ class MarginByRiskClass:
                                 list_WS.append(WS)
                                 tenor_K.append(tenor)
                                 index.append(subcurve)
-                
+
                 K = k_delta('Rates',list_WS,tenor=tenor_K,index=index,calculation_currency=self.calculation_currency)
                 list_K.append(K)
 
@@ -152,7 +162,7 @@ class MarginByRiskClass:
 
 
     def DeltaMargin(self):
-        updates = deepcopy(gv.dict_margin_by_risk_class)
+        updates = deepcopy(dict_margin_by_risk_class)
 
         if (('Risk_FX'         not in self.list_risk_types) and \
             ('Risk_CreditQ'    not in self.list_risk_types) and \
@@ -290,7 +300,7 @@ class MarginByRiskClass:
                                 bucket1 = bucket_list[i]
                                 bucket2 = bucket_list[j]
 
-                                if risk_class in gv.list_rates:
+                                if risk_class in list_rates:
                                     g = min(list_CR)/max(list_CR)
 
                                     if len(self.currency_list()) > 1:
@@ -298,11 +308,11 @@ class MarginByRiskClass:
                                     else:
                                         gamma = 1
 
-                                elif risk_class in gv.list_fx:
+                                elif risk_class in list_fx:
                                     g = 1
                                     gamma = wnc.FX_Corr[4]
 
-                                elif risk_class in gv.list_credit_nonQ:
+                                elif risk_class in list_credit_nonQ:
                                     g = 1
                                     gamma = wnc.gamma(risk_class)
 
@@ -314,23 +324,23 @@ class MarginByRiskClass:
                                 S2 = list_S[j]
                                 K_squared_sum += gamma * S1 * S2 * g
 
-                if risk_class in gv.list_creditQ:
+                if risk_class in list_creditQ:
                     updates['CreditQ']['Delta'] += sqrt(K_squared_sum) + K_Res
 
-                elif risk_class in gv.list_credit_nonQ:
+                elif risk_class in list_credit_nonQ:
                     updates['CreditNonQ']['Delta'] += sqrt(K_squared_sum) + K_Res
 
-                elif risk_class in gv.list_equity:
+                elif risk_class in list_equity:
                     updates['Equity']['Delta'] += sqrt(K_squared_sum) + K_Res
 
-                elif risk_class in gv.list_commodity:
+                elif risk_class in list_commodity:
                     updates['Commodity']['Delta'] += sqrt(K_squared_sum)
 
         return pd.DataFrame(updates)
 
 
     def IRVegaMargin(self):
-        updates = deepcopy(gv.dict_margin_by_risk_class)
+        updates = deepcopy(dict_margin_by_risk_class)
 
         list_K   = []
         dict_S   = {}
@@ -339,6 +349,7 @@ class MarginByRiskClass:
         allowed_risk_classes = [risk_class for risk_class in self.list_risk_types if risk_class in ['Risk_IRVol', 'Risk_InflationVol']]
         if ('Risk_IRVol' not in self.list_risk_types) and \
            ('Risk_InflationVol' not in self.list_risk_types):
+           
             return pd.DataFrame(updates)
 
         else:
@@ -372,7 +383,7 @@ class MarginByRiskClass:
                                 index.append(tenor)
                             elif risk_class == 'Risk_InflationVol':
                                 index.append('Inf')
-                    
+                            
                     K = k_vega('Rates',VR,index=index)            
                     list_K.append(K)
                     
@@ -399,7 +410,7 @@ class MarginByRiskClass:
 
 
     def VegaMargin(self):
-        updates = deepcopy(gv.dict_margin_by_risk_class)
+        updates = deepcopy(dict_margin_by_risk_class)
         
         allowed_risk_classes = ['Risk_CreditVol','Risk_CreditVolNonQ','Risk_EquityVol','Risk_CommodityVol','Risk_FXVol']
         list_risk_classes = [risk_class for risk_class in self.list_risk_types if risk_class in allowed_risk_classes]
@@ -570,23 +581,23 @@ class MarginByRiskClass:
                             K_squared_sum += gamma * list_S[i] * list_S[j]
             
 
-                if risk_class in gv.list_creditQ:
+                if risk_class in list_creditQ:
                     updates['CreditQ']['Vega'] += sqrt(K_squared_sum) + K_Res 
 
-                elif risk_class in gv.list_credit_nonQ:
+                elif risk_class in list_credit_nonQ:
                     updates['CreditNonQ']['Vega'] += sqrt(K_squared_sum) + K_Res 
 
-                elif risk_class in gv.list_equity:
+                elif risk_class in list_equity:
                     updates['Equity']['Vega'] += sqrt(K_squared_sum) + K_Res 
 
-                elif risk_class in gv.list_commodity:
+                elif risk_class in list_commodity:
                     updates['Commodity']['Vega'] += sqrt(K_squared_sum) + K_Res 
 
         return pd.DataFrame(updates)
 
 
     def IRCurvatureMargin(self):
-        updates = deepcopy(gv.dict_margin_by_risk_class)
+        updates = deepcopy(dict_margin_by_risk_class)
 
         if ('Risk_IRVol' not in self.list_risk_types) and ('Risk_InflationVol' not in self.list_risk_types):
             return pd.DataFrame(updates)
@@ -605,33 +616,38 @@ class MarginByRiskClass:
                 for currency in currency_list:
                     crif_currency = self.crif[(self.crif['RiskType'].isin(['Risk_IRVol','Risk_InflationVol'])) & (self.crif['Qualifier'] == currency)]
                     list_rates_risk_types = utils.unique_list([risk_class for risk_class in list(crif_currency['RiskType']) if risk_class in ['Risk_IRVol','Risk_InflationVol']])
+                    
                     index = []
                     CVR_ik = []
+                    
+                    # Make an exception for Risk_InflationVol
+                    if (list_rates_risk_types == ['Risk_InflationVol']) and (crif_currency['AmountUSD'].sum()==0) and (self.calculation_currency==currency):
+                        return pd.DataFrame(updates)
+                    else:
+                        for risk_class in list_rates_risk_types:
+                            
+                            crif_riskClass = crif_currency[crif_currency['RiskType'] == risk_class]
 
-                    for risk_class in list_rates_risk_types:
-                        
-                        crif_riskClass = crif_currency[crif_currency['RiskType'] == risk_class]
+                            for tenor in utils.unique_list(crif_riskClass, 'Label1'):
+                                crif_tenor = crif_riskClass[crif_riskClass['Label1'] == tenor]
 
-                        for tenor in utils.unique_list(crif_riskClass, 'Label1'):
-                            crif_tenor = crif_riskClass[crif_riskClass['Label1'] == tenor]
+                                sensitivities = utils.sum_sensitivities(crif_tenor)
 
-                            sensitivities = utils.sum_sensitivities(crif_tenor)
+                                CVR = utils.scaling_func(tenor) * sensitivities
+                                CVR_ik.append(CVR)
+                                CVR_sum += CVR    
+                                CVR_abs_sum += abs(CVR)             
 
-                            CVR = utils.scaling_func(tenor) * sensitivities
-                            CVR_ik.append(CVR)
-                            CVR_sum += CVR    
-                            CVR_abs_sum += abs(CVR)             
+                                if risk_class == 'Risk_IRVol':
+                                    index.append(tenor)
+                                elif risk_class == 'Risk_InflationVol':
+                                    index.append('Inf')
+                                
+                        K = k_curvature('Rates', CVR_ik, index=index)
+                        list_K.append(K)
 
-                            if risk_class == 'Risk_IRVol':
-                                index.append(tenor)
-                            elif risk_class == 'Risk_InflationVol':
-                                index.append('Inf')
-                        
-                    K = k_curvature('Rates', CVR_ik, index=index)
-                    list_K.append(K)
-
-                    S = max(min(sum(CVR_ik), K), -K)
-                    list_S.append(S)
+                        S = max(min(sum(CVR_ik), K), -K)
+                        list_S.append(S)
 
                 theta  = min(CVR_sum/CVR_abs_sum, 0)
                 _lambda = (norm.ppf(0.995)**2 - 1) * (1 + theta) - theta
@@ -653,7 +669,7 @@ class MarginByRiskClass:
 
 
     def CurvatureMargin(self):
-        updates = deepcopy(gv.dict_margin_by_risk_class)
+        updates = deepcopy(dict_margin_by_risk_class)
         
         credit    = ['Risk_CreditVol','Risk_CreditVolNonQ']
         equity    = ['Risk_EquityVol']
@@ -687,15 +703,18 @@ class MarginByRiskClass:
                     else:
                         crif_risk_class = self.crif[(self.crif['RiskType']==risk_class) & (self.crif['Bucket'].isin([bucket, str(bucket)]))]
 
-                    CVR_i     = []
-                    index     = []
+                    CVR_i = []
+                    index = []
                     
                     for qualifier in utils.unique_list(crif_risk_class, 'Qualifier'):
                         
                         crif_qualifier = crif_risk_class[crif_risk_class['Qualifier'] == qualifier]           
                         
-                        tenor_list = utils.unique_list(crif_qualifier, 'Label1')
-                        list_vega  = utils.unique_list(crif_qualifier, 'AmountUSD')
+                        # tenor_list = utils.unique_list(crif_qualifier, 'Label1')
+                        # list_vega  = utils.unique_list(crif_qualifier, 'AmountUSD')
+                        tenor_list = crif_qualifier['Label1'].to_list()
+                        vega_list  = crif_qualifier['AmountUSD'].to_list()
+
                         RW    = wnc.RW(risk_class,bucket)
                         sigma = RW * sqrt(365/14)/norm.ppf(0.99)
 
@@ -706,7 +725,7 @@ class MarginByRiskClass:
                                 sigma = 0                              
                         
                             CVR_ik = []                 
-                            for k, vega in zip(tenor_list,list_vega):
+                            for k, vega in zip(tenor_list,vega_list):
                                 CVR_ik.append(utils.scaling_func(k) * sigma * vega)
                             CVR_i.append(sum(CVR_ik))
                             index = ''
@@ -732,7 +751,7 @@ class MarginByRiskClass:
                                             index.append(label2)
                                     
                                     CVR_i.append(utils.scaling_func(tenor) * sensitivities)
-                                        
+
                     K = k_curvature(risk_class, CVR_i, bucket, index)
                     
                     #  Residual bucket
@@ -864,7 +883,7 @@ class MarginByRiskClass:
 
 
     def BaseCorrMargin(self):
-        updates = deepcopy(gv.dict_margin_by_risk_class)
+        updates = deepcopy(dict_margin_by_risk_class)
         crif_base_corr = self.crif[(self.crif['RiskType'] == 'Risk_BaseCorr')]
         list_WS = []
 
