@@ -1,6 +1,6 @@
 import pandas as pd
 
-from Weights_and_Corr.v2_6 import *
+from Weights_and_Corr.v2_7 import *
 from . import (
     list_creditQ,
     list_credit_nonQ,
